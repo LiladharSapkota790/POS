@@ -1,31 +1,44 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 
+
+
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/restaurant-pos', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
 
-// Define Table model
-const Table = mongoose.model('Table', new mongoose.Schema({
-    number: Number,
-    status: String,
-    orders: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Order' }]
-}));
+const tableRoutes = require('./routes/tableRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const menuRoutes = require('./routes/menuRoutes');
 
-// Define Order model
-const Order = mongoose.model('Order', new mongoose.Schema({
-    table: { type: mongoose.Schema.Types.ObjectId, ref: 'Table' },
-    dish: String,
-    quantity: Number
-}));
+app.use('/api/tables', tableRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/menu', menuRoutes);
+
+
+  // MongoDB connection
+
+const mongoURI =  process.env.MONGOURI;
+
+mongoose.connect(mongoURI, {
+})
+.then(() => console.log('MongoDB connected'))
+.catch(err => console.error('MongoDB connection error:', err));
+
+
+
+
+
+
+app.get('/', (req, res) => {
+    res.send('LDPOS IS running');
+  });
+  
 
 // Routes
 app.get('/api/tables', async (req, res) => {
@@ -48,4 +61,4 @@ app.post('/api/orders', async (req, res) => {
     res.json(order);
 });
 
-app.listen(5000, () => console.log('Server running on port 5000'));
+app.listen(5000, () => console.log('LDPOS IS running on port 5000'));
