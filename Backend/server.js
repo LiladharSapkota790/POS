@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const orderSummaryRoutes = require('./routes/orderSummaryRoutes');
 
 
 
@@ -19,6 +20,12 @@ const menuRoutes = require('./routes/menuRoutes');
 app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/menu', menuRoutes);
+
+app.use('/api', orderSummaryRoutes);
+
+
+// Routes
+app.use('/api/orders', orderSummaryRoutes);
 
 
   // MongoDB connection
