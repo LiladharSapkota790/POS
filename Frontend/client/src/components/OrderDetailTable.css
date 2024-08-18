@@ -1,0 +1,57 @@
+/* General Table Styles */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 16px;
+  text-align: left;
+}
+
+/* Table Header Styles */
+thead {
+  background-color: #f4f4f4;
+}
+
+thead th {
+  padding: 12px;
+  border-bottom: 2px solid #ddd;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Table Body Styles */
+tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #fff;
+}
+
+tbody td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Table Row Hover Effect */
+tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Table Heading Styles */
+h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  table {
+    font-size: 14px;
+  }
+
+  thead th, tbody td {
+    padding: 8px;
+  }
+}
