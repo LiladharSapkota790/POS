@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const orderSummaryRoutes = require('./routes/orderSummaryRoutes');
+const checkoutRoutes = require('./routes/tableRoutes');
+const Table = require('./models/Table'); 
 
 
 
@@ -27,6 +29,7 @@ app.use('/api', orderSummaryRoutes);
 // Routes
 app.use('/api/orders', orderSummaryRoutes);
 
+app.use('/api', checkoutRoutes); 
 
   // MongoDB connection
 
