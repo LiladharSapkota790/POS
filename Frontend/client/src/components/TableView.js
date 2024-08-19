@@ -8,6 +8,7 @@ const TableView = () => {
   const [tables, setTables] = useState([]);
   const [selectedTable, setSelectedTable] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
+  const [ordersByTable, setOrdersByTable] = useState({});
   const [orderItems, setOrderItems] = useState([]);
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
   const [newOrderItemName, setNewOrderItemName] = useState('');
@@ -33,12 +34,10 @@ const TableView = () => {
       setSelectedTable(null);
       setOrderItems([]);
     } else {
-      api.get(`/orders/${table._id}`)
-        .then(response => {
-          setOrderItems(response.data.items || []);
-          setSelectedTable(table);
-        })
-        .catch(error => console.error("There was an error fetching orders for the table!", error));
+      // Load orders for the selected table
+      const orders = ordersByTable[table._id] || [];
+      setOrderItems(orders);
+      setSelectedTable(table);
     }
   };
 
@@ -49,10 +48,10 @@ const TableView = () => {
 
   const handleAddOrderItem = () => {
     if (selectedMenuItem) {
-      setOrderItems([...orderItems, { ...selectedMenuItem, comment }]);
+      setOrderItems(prevOrderItems => [...prevOrderItems, { ...selectedMenuItem, comment }]);
       setSelectedMenuItem(null);
     } else if (newOrderItemName && newOrderItemPrice) {
-      setOrderItems([...orderItems, { name: newOrderItemName, price: parseFloat(newOrderItemPrice), comment }]);
+      setOrderItems(prevOrderItems => [...prevOrderItems, { name: newOrderItemName, price: parseFloat(newOrderItemPrice), comment }]);
       setNewOrderItemName('');
       setNewOrderItemPrice('');
     }
@@ -60,8 +59,7 @@ const TableView = () => {
   };
 
   const handleRemoveOrderItem = (index) => {
-    const updatedItems = orderItems.filter((_, i) => i !== index);
-    setOrderItems(updatedItems);
+    setOrderItems(prevOrderItems => prevOrderItems.filter((_, i) => i !== index));
   };
 
   const handlePlaceOrder = async () => {
@@ -81,6 +79,11 @@ const TableView = () => {
     try {
       await placeOrder(orderData);
       setOrderSuccess('Order placed successfully!');
+      // Update ordersByTable to reflect the new order
+      setOrdersByTable(prevOrders => ({
+        ...prevOrders,
+        [selectedTable._id]: orderItems
+      }));
     } catch (error) {
       console.error("Error placing the order:", error.response ? error.response.data : error.message);
       setOrderSuccess('Failed to place order.');
@@ -103,7 +106,7 @@ const TableView = () => {
     const totalCharge = orderItems.reduce((acc, item) => acc + item.price, 0);
     const change = amountReceived - totalCharge;
     api.post('/checkout', {
-      table: selectedTable._id,
+      tableId: selectedTable._id,
       items: orderItems,
       paymentMethod,
       amountReceived: amountReceived,
@@ -112,6 +115,12 @@ const TableView = () => {
       .then(response => {
         setOrderSuccess('Checkout completed successfully!');
         setShowCheckout(false);
+        // Clear orders for the table after checkout
+        setOrdersByTable(prevOrders => {
+          const updatedOrders = { ...prevOrders };
+          delete updatedOrders[selectedTable._id];
+          return updatedOrders;
+        });
         setOrderItems([]);
         setSelectedTable(null);
       })
@@ -208,10 +217,15 @@ const TableView = () => {
         <Checkout
           orderItems={orderItems}
           onCheckoutComplete={handleCheckoutComplete}
+          onClose={() => setShowCheckout(false)}
         />
       )}
 
-      {orderSuccess && <p>{orderSuccess}</p>}
+      {orderSuccess && (
+        <div className="alert">
+          {orderSuccess}
+        </div>
+      )}
     </div>
   );
 };
