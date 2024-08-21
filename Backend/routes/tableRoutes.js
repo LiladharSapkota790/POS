@@ -64,11 +64,68 @@ router.get('/orders/:tableId', async (req, res) => {
 
 
 // Update order status to completed
+// router.post('/checkout', async (req, res) => {
+//   try {
+//     const { items, paymentMethod, amountReceived } = req.body;
+//     const order = await Order.findOneAndUpdate(
+//       { status: 'pending' },
+//       {
+//         items,
+//         paymentMethod,
+//         totalAmount: items.reduce((acc, item) => acc + item.price, 0),
+//         status: 'completed'
+//       },
+//       { new: true }
+//     );
+
+//     if (!order) {
+//       return res.status(404).json({ message: 'Order not found or already completed.' });
+//     }
+
+//     const change = amountReceived - order.totalAmount;
+//     res.json({ order, change });
+//   } catch (error) {
+//     console.error('Error during checkout:', error);
+//     res.status(500).json({ message: 'Error during checkout', error });
+//   }
+// });
+
+
+// router.post('/checkout', async (req, res) => {
+//   try {
+//     const { tableId, items, paymentMethod, amountReceived } = req.body;
+
+//     // Find the pending order for the specific table
+//     const order = await Order.findOneAndUpdate(
+//       { tableId, status: 'pending' },  // Ensure you are finding the correct order by table ID
+//       {
+//         items,
+//         paymentMethod,
+//         totalAmount: items.reduce((acc, item) => acc + item.price, 0),
+//         status: 'completed'
+//       },
+//       { new: true }
+//     );
+
+//     if (!order) {
+//       return res.status(404).json({ message: 'Order not found or already completed.' });
+//     }
+
+//     const change = amountReceived - order.totalAmount;
+//     res.json({ order, change });
+//   } catch (error) {
+//     console.error('Error during checkout:', error);
+//     res.status(500).json({ message: 'Error during checkout', error });
+//   }
+// });
+
+
+// Update order status to completed
 router.post('/checkout', async (req, res) => {
   try {
-    const { items, paymentMethod, amountReceived } = req.body;
+    const { tableId, items, paymentMethod, amountReceived, change } = req.body;
     const order = await Order.findOneAndUpdate(
-      { status: 'pending' },
+      { tableId, status: 'pending' },
       {
         items,
         paymentMethod,
@@ -77,21 +134,15 @@ router.post('/checkout', async (req, res) => {
       },
       { new: true }
     );
-
     if (!order) {
       return res.status(404).json({ message: 'Order not found or already completed.' });
     }
-
-    const change = amountReceived - order.totalAmount;
-    res.json({ order, change });
+    res.json(order);
   } catch (error) {
     console.error('Error during checkout:', error);
     res.status(500).json({ message: 'Error during checkout', error });
   }
 });
-
-
-
 
 
 module.exports = router;

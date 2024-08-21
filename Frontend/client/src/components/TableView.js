@@ -3,6 +3,7 @@ import api from '../api/api';
 import Checkout from './CheckoutView'; // Import the Checkout component
 import './TableView.css';
 import { placeOrder } from '../api/api';
+import { Alert } from 'react-bootstrap';
 
 const TableView = () => {
   const [tables, setTables] = useState([]);
@@ -110,7 +111,8 @@ const TableView = () => {
       items: orderItems,
       paymentMethod,
       amountReceived: amountReceived,
-      change: change
+      change: change,
+      status:"Completed",
     })
       .then(response => {
         setOrderSuccess('Checkout completed successfully!');
@@ -137,6 +139,20 @@ const TableView = () => {
     categories[item.category].push(item);
     return categories;
   }, {});
+
+
+
+  // Automatically hide the alert after 3 seconds
+  useEffect(() => {
+    if (orderSuccess) {
+      const timer = setTimeout(() => {
+        setOrderSuccess(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [orderSuccess]);
+
+
 
   return (
     <div className="table-view-container">
@@ -218,14 +234,23 @@ const TableView = () => {
           orderItems={orderItems}
           onCheckoutComplete={handleCheckoutComplete}
           onClose={() => setShowCheckout(false)}
+          tableNumber={selectedTable.number} 
+          
         />
       )}
 
-      {orderSuccess && (
+      {/* {orderSuccess && (
         <div className="alert">
           {orderSuccess}
         </div>
+      )} */}
+      {orderSuccess && (
+        <Alert variant={orderSuccess.includes('success') ? 'success' : 'danger'} dismissible>
+          {orderSuccess}
+        </Alert>
       )}
+
+
     </div>
   );
 };
