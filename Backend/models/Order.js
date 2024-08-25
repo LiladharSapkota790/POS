@@ -1,9 +1,11 @@
-// const mongoose = require('mongoose');
+
+
+const mongoose = require('mongoose');
 
 // const OrderSchema = new mongoose.Schema({
 //   tableId: {
 //     type: mongoose.Schema.Types.ObjectId,
-//     ref: 'Table', // Adjust based on your schema
+//     ref: 'Table', 
 //     required: true
 //   },
 //   items: [{
@@ -31,15 +33,13 @@
 //   totalAmount: {
 //     type: Number,
 //     default: 0
+//   },
+//   orderDate: {
+//     type: Date,
+//     default: Date.now
 //   }
 // });
 
-// const Order = mongoose.model('Order', OrderSchema);
-
-// module.exports = Order;
-
-
-const mongoose = require('mongoose');
 
 const OrderSchema = new mongoose.Schema({
   tableId: {
@@ -62,8 +62,7 @@ const OrderSchema = new mongoose.Schema({
     }
   }],
   paymentMethod: {
-    type: String,
-    required: true
+    type: String
   },
   status: {
     type: String,
@@ -76,8 +75,17 @@ const OrderSchema = new mongoose.Schema({
   orderDate: {
     type: Date,
     default: Date.now
+  },
+  orderStartTime: {
+    type: Date,
+    default: Date.now // Automatically set to the time the order is created
+  },
+  orderEndTime: {
+    type: Date // Will be set when the order is completed
   }
 });
+
+
 
 const Order = mongoose.model('Order', OrderSchema);
 
