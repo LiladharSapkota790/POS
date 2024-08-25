@@ -129,32 +129,32 @@ router.put('/:orderId', async (req, res) => {
 
 
 
-// Get order summary for a specific date range
-router.get('/summary', async (req, res) => {
-  const { startDate, endDate } = req.query; // Expecting start and end date in query parameters
+// // Get order summary for a specific date range
+// router.get('/summary', async (req, res) => {
+//   const { startDate, endDate } = req.query; // Expecting start and end date in query parameters
 
-  try {
-    const summary = await Order.aggregate([
-      {
-        $match: {
-          createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
-        }
-      },
-      {
-        $group: {
-          _id: null,
-          totalSales: { $sum: "$totalAmount" },
-          totalOrders: { $count: {} }
-        }
-      }
-    ]);
+//   try {
+//     const summary = await Order.aggregate([
+//       {
+//         $match: {
+//           createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) }
+//         }
+//       },
+//       {
+//         $group: {
+//           _id: null,
+//           totalSales: { $sum: "$totalAmount" },
+//           totalOrders: { $count: {} }
+//         }
+//       }
+//     ]);
 
-    res.status(200).json(summary[0] || { totalSales: 0, totalOrders: 0 });
-  } catch (error) {
-    console.error('Error fetching order summary:', error);
-    res.status(500).json({ message: 'Error fetching order summary', error });
-  }
-});
+//     res.status(200).json(summary[0] || { totalSales: 0, totalOrders: 0 });
+//   } catch (error) {
+//     console.error('Error fetching order summary:', error);
+//     res.status(500).json({ message: 'Error fetching order summary', error });
+//   }
+// });
 
 
 

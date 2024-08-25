@@ -20,6 +20,10 @@ const OrderDetailTable = () => {
     fetchOrderSummary();
   }, []);
 
+  const formatDate = (date) => {
+    return date ? new Date(date).toLocaleString() : 'In Progress';
+  };
+
   return (
     <div>
       <h2>Order Details</h2>
@@ -32,24 +36,31 @@ const OrderDetailTable = () => {
             <th>Total Amount</th>
             <th>Payment Status</th>
             <th>Payment Method</th>
+            <th>Order Start Time</th>
+            <th>Order End Time</th>
           </tr>
         </thead>
         <tbody>
-          {orderSummary.map((order) => (
-            <tr key={order.orderNumber}>
-              <td>{order.orderNumber}</td>
-              <td>{order.tableNo}</td>
-              <td>{order.items}</td>
-              <td>${order.totalAmount.toFixed(2)}</td>
-              <td>{order.paymentStatus}</td>
-              <td>{order.paymentMethod}</td>
-            </tr>
-          ))}
+          {orderSummary.map((order, index) => {
+            console.log('Order End Time:', order.orderEndTime); // Log the orderEndTime here
+            return (
+              <tr key={order.orderNumber}>
+                <td>{index + 1}</td> 
+                <td>{order.tableNo}</td>
+                <td>{order.items}</td>
+                <td>${order.totalAmount.toFixed(2)}</td>
+                <td>{order.paymentStatus}</td>
+                <td>{order.paymentMethod}</td>
+                <td>{formatDate(order.orderStartTime)}</td> 
+                <td>{formatDate(order.orderEndTime)}</td> 
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
+    
   );
 };
 
 export default OrderDetailTable;
-
