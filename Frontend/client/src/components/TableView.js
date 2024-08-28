@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/api';
+import api, { getPendingOrders } from '../api/api';
 import Checkout from './CheckoutView'; // Import the Checkout component
 import './TableView.css';
 import { placeOrder } from '../api/api';
@@ -35,10 +35,20 @@ const TableView = () => {
       setSelectedTable(null);
       setOrderItems([]);
     } else {
-      // Load orders for the selected table
-      const orders = ordersByTable[table._id] || [];
-      setOrderItems(orders);
       setSelectedTable(table);
+      // Fetch pending orders for the selected table
+      getPendingOrders(table._id)
+        .then(response => {
+         
+          // Log each order and its items
+          response.data.forEach(order => {
+           
+          });
+          setOrderItems(response.data.flatMap(order => order.items));
+        })
+        .catch(error => {
+          console.error("There was an error fetching orders!", error);
+        });
     }
   };
 
@@ -68,6 +78,7 @@ const TableView = () => {
       setOrderSuccess('Cannot place order. Ensure table is selected and items are added.');
       return;
     }
+
     const orderData = {
       tableId: selectedTable._id,
       items: orderItems.map(item => ({
@@ -75,18 +86,33 @@ const TableView = () => {
         comment: item.comment || '',
         price: item.price
       })),
-      paymentMethod: paymentMethod || 'Unknown'
+      paymentMethod: paymentMethod || 'Unknown',
+      totalAmount: orderItems.reduce((acc, item) => acc + item.price, 0)
     };
+
     try {
-      await placeOrder(orderData);
+      const response = await placeOrder(orderData);
+
+      // Directly use the response as it appears to be the order object
+      const newOrder = response;
+
+      // Check if response has all necessary data
+      if (!newOrder || !newOrder.tableId || !newOrder.items) {
+        throw new Error('No valid order data received from server');
+      }
+
       setOrderSuccess('Order placed successfully!');
-      // Update ordersByTable to reflect the new order
+
+      // Update ordersByTable with the new order
       setOrdersByTable(prevOrders => ({
         ...prevOrders,
-        [selectedTable._id]: orderItems
+        [selectedTable._id]: [
+          ...(prevOrders[selectedTable._id] || []),
+          newOrder // Add the new order directly
+        ]
       }));
     } catch (error) {
-      console.error("Error placing the order:", error.response ? error.response.data : error.message);
+      console.error("Error placing the order:", error.message);
       setOrderSuccess('Failed to place order.');
     }
   };
@@ -112,7 +138,7 @@ const TableView = () => {
       paymentMethod,
       amountReceived: amountReceived,
       change: change,
-      status:"Completed",
+      status: "Completed",
     })
       .then(response => {
         setOrderSuccess('Checkout completed successfully!');
@@ -140,8 +166,6 @@ const TableView = () => {
     return categories;
   }, {});
 
-
-
   // Automatically hide the alert after 3 seconds
   useEffect(() => {
     if (orderSuccess) {
@@ -151,8 +175,6 @@ const TableView = () => {
       return () => clearTimeout(timer);
     }
   }, [orderSuccess]);
-
-
 
   return (
     <div className="table-view-container">
@@ -179,7 +201,7 @@ const TableView = () => {
                 <ul>
                   {orderItems.map((item, index) => (
                     <li key={index}>
-                      {item.name} - ${item.price} <br />
+                      {item.name} - ${item.price.toFixed(2)} <br />
                       Comment: {item.comment || 'No comment'}
                       <button onClick={() => handleRemoveOrderItem(index)}>Remove</button>
                     </li>
@@ -200,14 +222,14 @@ const TableView = () => {
           Object.entries(groupedMenuItems).map(([category, items], index) => (
             <div className="category-section" key={index}>
               <h4>{category}</h4>
-              <ul>
+              <div className="menu-grid">
                 {items.map(item => (
-                  <li key={item._id}>
+                  <div key={item._id} className="menu-item">
                     <button
                       onClick={() => handleMenuItemClick(item)}
-                      className="menu-item-button"
+                      className={`menu-item-button ${selectedMenuItem && selectedMenuItem._id === item._id ? 'active' : ''}`}
                     >
-                      {item.name} - ${item.price}
+                      {item.name} - ${item.price.toFixed(2)}
                     </button>
                     {selectedMenuItem && selectedMenuItem._id === item._id && (
                       <div className="item-controls">
@@ -219,38 +241,30 @@ const TableView = () => {
                         <button onClick={handleAddOrderItem}>Add Item</button>
                       </div>
                     )}
-                  </li>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           ))
         ) : (
-        <p>Please select a table.</p>
+          <p>Select a table to view the menu</p>
         )}
       </div>
 
       {showCheckout && (
         <Checkout
-          orderItems={orderItems}
+          table={selectedTable}
           onCheckoutComplete={handleCheckoutComplete}
-          onClose={() => setShowCheckout(false)}
-          tableNumber={selectedTable.number} 
-          
+          orderItems={orderItems}
+          setShowCheckout={setShowCheckout}
         />
       )}
 
-      {/* {orderSuccess && (
-        <div className="alert">
-          {orderSuccess}
-        </div>
-      )} */}
       {orderSuccess && (
-        <Alert variant={orderSuccess.includes('success') ? 'success' : 'danger'} dismissible>
+        <Alert variant={orderSuccess.includes('success') ? 'success' : 'danger'}>
           {orderSuccess}
         </Alert>
       )}
-
-
     </div>
   );
 };

@@ -1,27 +1,30 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+
+import { fetchOrderSummary } from '../api/api';
 import './OrderDetailTable.css';
 
 const OrderDetailTable = () => {
   const [orderSummary, setOrderSummary] = useState([]);
+  const [error, setError] = useState(null); // Add error state
 
+  // Fetch order summary from the backend
   useEffect(() => {
-    // Fetch order summary from the backend
-    const fetchOrderSummary = async () => {
+    const loadOrderSummary = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/orderDetails');
-        console.log("Details", response.data);
-        setOrderSummary(response.data);
+        const data = await fetchOrderSummary(); // Call the function from the API
+       
+        setOrderSummary(data);
       } catch (error) {
         console.error('Error fetching order summary:', error);
+        setError('Failed to fetch order summary.'); // Set error message
       }
     };
 
-    fetchOrderSummary();
+    loadOrderSummary();
   }, []);
 
   const formatDate = (date) => {
-    return date ? new Date(date).toLocaleString() : 'In Progress';
+    return date ? new Date(date).toLocaleString() : 'NOT PAID';
   };
 
   return (
@@ -42,7 +45,7 @@ const OrderDetailTable = () => {
         </thead>
         <tbody>
           {orderSummary.map((order, index) => {
-            console.log('Order End Time:', order.orderEndTime); // Log the orderEndTime here
+         
             return (
               <tr key={order.orderNumber}>
                 <td>{index + 1}</td> 
