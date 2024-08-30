@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api/api';
+import api, { getPendingOrders } from '../api/api';
 import Checkout from './CheckoutView'; // Import the Checkout component
+import MenuView from './MenuView'; // Import the MenuView component
 import './TableView.css';
 import { placeOrder } from '../api/api';
 import { Alert } from 'react-bootstrap';
@@ -22,7 +23,22 @@ const TableView = () => {
   useEffect(() => {
     // Fetch tables and menu items
     api.get('/tables')
-      .then(response => setTables(response.data))
+      .then(response => {
+        setTables(response.data);
+        // Set the first table as the default selected table
+        if (response.data.length > 0) {
+          const defaultTable = response.data[0];
+          setSelectedTable(defaultTable);
+          // Fetch pending orders for the default selected table
+          getPendingOrders(defaultTable._id)
+            .then(response => {
+              setOrderItems(response.data.flatMap(order => order.items));
+            })
+            .catch(error => {
+              console.error("There was an error fetching orders!", error);
+            });
+        }
+      })
       .catch(error => console.error("There was an error fetching tables!", error));
 
     api.get('/menu')
@@ -35,10 +51,15 @@ const TableView = () => {
       setSelectedTable(null);
       setOrderItems([]);
     } else {
-      // Load orders for the selected table
-      const orders = ordersByTable[table._id] || [];
-      setOrderItems(orders);
       setSelectedTable(table);
+      // Fetch pending orders for the selected table
+      getPendingOrders(table._id)
+        .then(response => {
+          setOrderItems(response.data.flatMap(order => order.items));
+        })
+        .catch(error => {
+          console.error("There was an error fetching orders!", error);
+        });
     }
   };
 
@@ -68,6 +89,7 @@ const TableView = () => {
       setOrderSuccess('Cannot place order. Ensure table is selected and items are added.');
       return;
     }
+
     const orderData = {
       tableId: selectedTable._id,
       items: orderItems.map(item => ({
@@ -75,18 +97,29 @@ const TableView = () => {
         comment: item.comment || '',
         price: item.price
       })),
-      paymentMethod: paymentMethod || 'Unknown'
+      paymentMethod: paymentMethod || 'Unknown',
+      totalAmount: orderItems.reduce((acc, item) => acc + item.price, 0)
     };
+
     try {
-      await placeOrder(orderData);
+      const response = await placeOrder(orderData);
+      const newOrder = response;
+
+      if (!newOrder || !newOrder.tableId || !newOrder.items) {
+        throw new Error('No valid order data received from server');
+      }
+
       setOrderSuccess('Order placed successfully!');
-      // Update ordersByTable to reflect the new order
+
       setOrdersByTable(prevOrders => ({
         ...prevOrders,
-        [selectedTable._id]: orderItems
+        [selectedTable._id]: [
+          ...(prevOrders[selectedTable._id] || []),
+          newOrder
+        ]
       }));
     } catch (error) {
-      console.error("Error placing the order:", error.response ? error.response.data : error.message);
+      console.error("Error placing the order:", error.message);
       setOrderSuccess('Failed to place order.');
     }
   };
@@ -112,12 +145,11 @@ const TableView = () => {
       paymentMethod,
       amountReceived: amountReceived,
       change: change,
-      status:"Completed",
+      status: "Completed",
     })
       .then(response => {
         setOrderSuccess('Checkout completed successfully!');
         setShowCheckout(false);
-        // Clear orders for the table after checkout
         setOrdersByTable(prevOrders => {
           const updatedOrders = { ...prevOrders };
           delete updatedOrders[selectedTable._id];
@@ -132,17 +164,25 @@ const TableView = () => {
       });
   };
 
-  const groupedMenuItems = menuItems.reduce((categories, item) => {
-    if (!categories[item.category]) {
-      categories[item.category] = [];
+  const processMenuData = (data) => {
+    // Assuming data is an array with one object
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+      const [menuObject] = data;
+      const processedData = {};
+      for (const [category, subcategories] of Object.entries(menuObject)) {
+        if (category !== '_id') {
+          processedData[category] = subcategories;
+        }
+      }
+      return processedData;
     }
-    categories[item.category].push(item);
-    return categories;
-  }, {});
+    return {};
+  };
+
+  const groupedMenuItems = processMenuData(menuItems);
 
 
 
-  // Automatically hide the alert after 3 seconds
   useEffect(() => {
     if (orderSuccess) {
       const timer = setTimeout(() => {
@@ -151,8 +191,6 @@ const TableView = () => {
       return () => clearTimeout(timer);
     }
   }, [orderSuccess]);
-
-
 
   return (
     <div className="table-view-container">
@@ -179,7 +217,7 @@ const TableView = () => {
                 <ul>
                   {orderItems.map((item, index) => (
                     <li key={index}>
-                      {item.name} - ${item.price} <br />
+                      {item.name} - ${item.price.toFixed(2)} <br />
                       Comment: {item.comment || 'No comment'}
                       <button onClick={() => handleRemoveOrderItem(index)}>Remove</button>
                     </li>
@@ -189,68 +227,44 @@ const TableView = () => {
                 <p>No items in the order.</p>
               )}
             </div>
-            <button onClick={handleCheckout}>Checkout</button>
-            <button onClick={handlePlaceOrder}>Place Order</button>
+            <div className='placeorder-button-container'> 
+              <button className='checkout-button' onClick={handleCheckout}>Checkout</button>
+              <button className="place-order-button" onClick={handlePlaceOrder}>Place Order</button>
+            </div>
           </div>
         )}
       </div>
 
       <div className="right-panel">
         {selectedTable ? (
-          Object.entries(groupedMenuItems).map(([category, items], index) => (
-            <div className="category-section" key={index}>
-              <h4>{category}</h4>
-              <ul>
-                {items.map(item => (
-                  <li key={item._id}>
-                    <button
-                      onClick={() => handleMenuItemClick(item)}
-                      className="menu-item-button"
-                    >
-                      {item.name} - ${item.price}
-                    </button>
-                    {selectedMenuItem && selectedMenuItem._id === item._id && (
-                      <div className="item-controls">
-                        <textarea
-                          value={comment}
-                          onChange={e => setComment(e.target.value)}
-                          placeholder="Add a comment (optional)"
-                        />
-                        <button onClick={handleAddOrderItem}>Add Item</button>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))
+          <MenuView
+            groupedMenuItems={groupedMenuItems}
+            handleMenuItemClick={handleMenuItemClick}
+            selectedMenuItem={selectedMenuItem}
+            handleAddOrderItem={handleAddOrderItem}
+            comment={comment}
+            setComment={setComment}
+          />
         ) : (
-        <p>Please select a table.</p>
+          <div className='place-order-button'>Select Any table to See Menu</div>
         )}
       </div>
 
       {showCheckout && (
         <Checkout
-          orderItems={orderItems}
+          table={selectedTable}
           onCheckoutComplete={handleCheckoutComplete}
-          onClose={() => setShowCheckout(false)}
-          tableNumber={selectedTable.number} 
-          
+          orderItems={orderItems}
+          onClose={() => setShowCheckout(false)} 
+          tableNumber={selectedTable.number}
         />
       )}
 
-      {/* {orderSuccess && (
-        <div className="alert">
-          {orderSuccess}
-        </div>
-      )} */}
       {orderSuccess && (
-        <Alert variant={orderSuccess.includes('success') ? 'success' : 'danger'} dismissible>
+        <Alert variant={orderSuccess.includes('success') ? 'success' : 'danger'}>
           {orderSuccess}
         </Alert>
       )}
-
-
     </div>
   );
 };

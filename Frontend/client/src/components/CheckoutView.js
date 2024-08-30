@@ -4,15 +4,18 @@ import './CheckoutView.css'; // Add your styles for the modal here
 const CheckoutView = ({ orderItems, onCheckoutComplete, onClose, tableNumber }) => {
   const [amountReceived, setAmountReceived] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     // Reset state when the modal is opened
     setAmountReceived('');
     setPaymentMethod('cash');
-  }, []);
+    setError('');
+  }, [orderItems]);
 
   const totalCharge = orderItems.reduce((acc, item) => acc + item.price, 0);
-  const change = parseFloat(amountReceived) - totalCharge;
+  const amount = parseFloat(amountReceived);
+  const change = !isNaN(amount) && amount >= totalCharge ? amount - totalCharge : 0;
 
   const handlePaymentMethodChange = (method) => {
     setPaymentMethod(method);
@@ -24,14 +27,28 @@ const CheckoutView = ({ orderItems, onCheckoutComplete, onClose, tableNumber }) 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (paymentMethod === 'cash' && amountReceived) {
-      onCheckoutComplete(parseFloat(amountReceived));
+      if (isNaN(amount) || amount < totalCharge) {
+        setError('Insufficient amount. Please enter more.');
+        return;
+      }
+      setError('');
+      onCheckoutComplete(amount);
+      onClose(); // Close the modal after checkout
     } else {
-      alert('Please enter the amount received.');
+      setError('Please enter the amount received.');
     }
   };
 
+  // New function to handle mouse leave
+  const handleMouseLeave = () => {
+    onClose(); // Close the modal when mouse leaves
+  };
+
   return (
-    <div className={`modal ${orderItems.length > 0 ? 'show' : ''}`}>
+    <div
+      className={`modal ${orderItems.length > 0 ? 'show' : ''}`}
+      onMouseLeave={handleMouseLeave} // Add mouse leave handler
+    >
       <div className="modal-content">
         <h3>Checkout</h3>
         <div>
@@ -74,11 +91,14 @@ const CheckoutView = ({ orderItems, onCheckoutComplete, onClose, tableNumber }) 
                   required
                 />
               </label>
-              <div>
-                Change: ${change.toFixed(2)}
-              </div>
+              {amount >= totalCharge && (
+                <div>
+                  Change: ${change.toFixed(2)}
+                </div>
+              )}
             </div>
           )}
+          {error && <p style={{ color: 'red' }}>{error}</p>}
           <button type="submit">Complete Checkout</button>
           <button type="button" onClick={onClose}>Close</button>
         </form>

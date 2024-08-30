@@ -47,23 +47,21 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get an order by table ID (for orders with 'pending' status)
-router.get('/table/:tableId', async (req, res) => {
-  const { tableId } = req.params;
-
+// Get all pending orders for a table
+// Get all pending orders for a table
+router.get('/pending/:tableId', async (req, res) => {
   try {
-    const order = await Order.findOne({ tableId, status: 'pending' }).populate('tableId');
-
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found for this table' });
-    }
-
-    res.status(200).json(order);
+    const { tableId } = req.params;
+  
+    const orders = await Order.find({ tableId, status: 'pending' }); 
+   
+    res.json(orders);
   } catch (error) {
-    console.error('Error fetching order:', error);
-    res.status(500).json({ message: 'Error fetching order', error });
+    console.error('Failed to fetch pending orders:', error); // Log error details
+    res.status(500).json({ error: 'Failed to fetch pending orders' });
   }
 });
+
 
 // Get all orders for a specific table
 router.get('/:tableId', async (req, res) => {

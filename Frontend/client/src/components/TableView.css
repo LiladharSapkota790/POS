@@ -68,23 +68,7 @@ li button:hover {
   background-color: #c82333;
 }
 
-/* Menu Container */
-.menu-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 20px;
-}
 
-.menu-item {
-  flex: 1 1 calc(25% - 15px); /* Four items per row */
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  padding: 10px;
-  background-color: #f9f9f9;
-  box-sizing: border-box;
-  text-align: center;
-}
 
 /* Table View Container */
 .table-view-container {
@@ -95,7 +79,7 @@ li button:hover {
 
 /* Left Panel for Tables */
 .left-panel {
-  width: 30%;
+  width: 40%;
   padding: 10px;
   border-right: 1px solid #ccc;
 }
@@ -126,7 +110,7 @@ li button:hover {
 
 /* Right Panel for Menu */
 .right-panel {
-  width: 70%;
+  width: 80%;
   padding: 10px;
 }
 
@@ -136,3 +120,95 @@ li button:hover {
   gap: 15px;
   margin-bottom: 20px;
 }
+.table-view-container {
+  display: flex;
+  gap: 20px;
+}
+
+.left-panel {
+  flex: 1;
+}
+
+.right-panel {
+  flex: 2;
+}
+
+.table-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.table-item {
+  cursor: pointer;
+  margin: 5px 0;
+  padding: 10px;
+  background-color: #f0f0f0;
+}
+
+.table-item.selected {
+  background-color: #d0f0d0;
+}
+
+/* Style for the Place Order button */
+.place-order-button {
+  background-color: red; /* Change button color to red */
+  color: white; /* Text color for contrast */
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 10px; /* Adds space between buttons */
+}
+
+/* Style for the Checkout button */
+.checkout-button {
+  background-color: #007bff; /* Default blue button color */
+  color: white; /* Text color for contrast */
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Align the buttons at the bottom */
+.placeorder-button-container {
+  margin-top: auto; /* Pushes the buttons to the bottom */
+  display: flex;
+  justify-content: flex-start; /* Align buttons to the left */
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #e0e0e0;
+}
+
+
+/* .menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+} */
+/* 
+.menu-item {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #fff;
+  text-align: center;
+}
+
+.menu-item-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+
+.item-controls {
+  margin-top: 10px;
+} */
+
+/* .category-section {
+  margin-bottom: 20px;
+} */
+
+

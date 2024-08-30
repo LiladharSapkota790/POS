@@ -1,0 +1,123 @@
+/* MenuView.css */
+
+.menu-view {
+  padding: 1rem;
+  font-family: Arial, sans-serif;
+}
+
+/* Styling for main category navigation */
+.main-category-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3rem;
+  margin-bottom: 3rem;
+  border: 1px solid red;
+  border-radius: 10px;
+}
+
+.main-category-nav button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff; /* Primary color for buttons */
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.main-category-nav button.active,
+.main-category-nav button:hover {
+  background-color: #0056b3; /* Darker shade for active and hover states */
+  color: #e0e0e0; /* Light text color for readability */
+}
+
+/* Styling for subcategory selection */
+.subcategory-selection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.subcategory-selection button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  background-color: #28a745; /* Secondary color for buttons */
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.subcategory-selection button.active,
+.subcategory-selection button:hover {
+  background-color: #218838; /* Darker shade for active and hover states */
+  color: #e0e0e0; /* Light text color for readability */
+}
+
+/* Menu items grid styling */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px; /* Space between subcategories and menu items */
+}
+
+.menu-item {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #f8f9fa; /* Light background for menu items */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  color: #000000;/* Subtle shadow for better visibility */
+}
+
+.menu-item-button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  /* background-color: #007bff;  */
+  color: #000000;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.menu-item-button.active,
+.menu-item-button:hover {
+  background-color: #0056b3;
+  color: #ffffff; 
+}
+
+.item-controls {
+  margin-top: 10px;
+}
+
+textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  background-color: #28a745; /* Secondary color for controls */
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+button:hover {
+  background-color: #218838; /* Darker shade for hover state */
+}
+
+
