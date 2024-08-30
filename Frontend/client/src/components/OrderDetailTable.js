@@ -1,24 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+
+import { fetchOrderSummary } from '../api/api';
 import './OrderDetailTable.css';
 
 const OrderDetailTable = () => {
   const [orderSummary, setOrderSummary] = useState([]);
+  const [error, setError] = useState(null); // Add error state
 
+  // Fetch order summary from the backend
   useEffect(() => {
-    // Fetch order summary from the backend
-    const fetchOrderSummary = async () => {
+    const loadOrderSummary = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/orderDetails');
-        console.log("Details", response.data);
-        setOrderSummary(response.data);
+        const data = await fetchOrderSummary(); // Call the function from the API
+       
+        setOrderSummary(data);
       } catch (error) {
         console.error('Error fetching order summary:', error);
+        setError('Failed to fetch order summary.'); // Set error message
       }
     };
 
-    fetchOrderSummary();
+    loadOrderSummary();
   }, []);
+
+  const formatDate = (date) => {
+    return date ? new Date(date).toLocaleString() : 'NOT PAID';
+  };
 
   return (
     <div>
@@ -32,24 +39,31 @@ const OrderDetailTable = () => {
             <th>Total Amount</th>
             <th>Payment Status</th>
             <th>Payment Method</th>
+            <th>Order Start Time</th>
+            <th>Order End Time</th>
           </tr>
         </thead>
         <tbody>
-          {orderSummary.map((order) => (
-            <tr key={order.orderNumber}>
-              <td>{order.orderNumber}</td>
-              <td>{order.tableNo}</td>
-              <td>{order.items}</td>
-              <td>${order.totalAmount.toFixed(2)}</td>
-              <td>{order.paymentStatus}</td>
-              <td>{order.paymentMethod}</td>
-            </tr>
-          ))}
+          {orderSummary.map((order, index) => {
+         
+            return (
+              <tr key={order.orderNumber}>
+                <td>{index + 1}</td> 
+                <td>{order.tableNo}</td>
+                <td>{order.items}</td>
+                <td>${order.totalAmount.toFixed(2)}</td>
+                <td>{order.paymentStatus}</td>
+                <td>{order.paymentMethod}</td>
+                <td>{formatDate(order.orderStartTime)}</td> 
+                <td>{formatDate(order.orderEndTime)}</td> 
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
+    
   );
 };
 
 export default OrderDetailTable;
-

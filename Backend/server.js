@@ -3,6 +3,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+
+
+
 const orderSummaryRoutes = require('./routes/orderSummaryRoutes');
 const checkoutRoutes = require('./routes/tableRoutes');
 const Table = require('./models/Table'); 
@@ -23,7 +26,7 @@ app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/menu', menuRoutes);
 
-app.use('/api', orderSummaryRoutes);
+app.use('/api/summary', orderSummaryRoutes);
 
 
 // Routes

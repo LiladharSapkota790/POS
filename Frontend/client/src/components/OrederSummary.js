@@ -17,7 +17,7 @@ const OrderSummary = () => {
       const response = await axios.get('http://localhost:5000/api/summary', {
         params: { startDate, endDate }
       });
-      console.log('API Response:', response.data); // Log the response for debugging
+   
       setSummary(response.data);
     } catch (error) {
       console.error('Error fetching order summary:', error);

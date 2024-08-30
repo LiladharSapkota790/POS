@@ -14,97 +14,23 @@ router.get('/', async (req, res) => {
 });
 
 
-// Fetch current order for a table
-router.get('/orders/:tableId', async (req, res) => {
-  try {
-    const { tableId } = req.params;
-    const order = await Order.findOne({ tableId, status: 'pending' });
-    if (order) {
-      return res.json(order);
-    } else {
-      return res.status(404).json({ message: 'No active order found for this table.' });
-    }
-  } catch (error) {
-    console.error('Error fetching order:', error);
-    return res.status(500).json({ message: 'Error fetching order', error });
-  }
-});
-
-
-
-
-
-
-
-// // Update order status to completed
-// router.post('/checkout', async (req, res) => {
-//   try {
-//     const { tableId, items, paymentMethod, amountReceived, change } = req.body;
-//     const order = await Order.findOneAndUpdate(
-//       { tableId, status: 'pending' },
-//       {
-//         items,
-//         paymentMethod,
-//         totalAmount: items.reduce((acc, item) => acc + item.price, 0),
-//         status: 'completed'
-//       },
-//       { new: true }
-//     );
-//     if (!order) {
-//       return res.status(404).json({ message: 'Order not found or already completed.' });
-//     }
-//     res.json(order);
-//   } catch (error) {
-//     console.error('Error during checkout:', error);
-//     res.status(500).json({ message: 'Error during checkout', error });
-//   }
-// });
-
-
-
-
-// Update order status to completed
-// router.post('/checkout', async (req, res) => {
-//   try {
-//     const { items, paymentMethod, amountReceived } = req.body;
-//     const order = await Order.findOneAndUpdate(
-//       { status: 'pending' },
-//       {
-//         items,
-//         paymentMethod,
-//         totalAmount: items.reduce((acc, item) => acc + item.price, 0),
-//         status: 'completed'
-//       },
-//       { new: true }
-//     );
-
-//     if (!order) {
-//       return res.status(404).json({ message: 'Order not found or already completed.' });
-//     }
-
-//     const change = amountReceived - order.totalAmount;
-//     res.json({ order, change });
-//   } catch (error) {
-//     console.error('Error during checkout:', error);
-//     res.status(500).json({ message: 'Error during checkout', error });
-//   }
-// });
 
 
 // router.post('/checkout', async (req, res) => {
 //   try {
 //     const { tableId, items, paymentMethod, amountReceived } = req.body;
 
-//     // Find the pending order for the specific table
+//     // Find the first pending order, or use a specific order ID if provided
 //     const order = await Order.findOneAndUpdate(
-//       { tableId, status: 'pending' },  // Ensure you are finding the correct order by table ID
+//       { tableId, status: 'pending' }, // Adjust query if needed
 //       {
 //         items,
 //         paymentMethod,
 //         totalAmount: items.reduce((acc, item) => acc + item.price, 0),
-//         status: 'completed'
+//         status: 'completed',
+//         orderEndTime: new Date() 
 //       },
-//       { new: true }
+//       { new: true } 
 //     );
 
 //     if (!order) {
@@ -119,30 +45,46 @@ router.get('/orders/:tableId', async (req, res) => {
 //   }
 // });
 
-
-// Update order status to completed
+// Checkout route
 router.post('/checkout', async (req, res) => {
   try {
-    const { tableId, items, paymentMethod, amountReceived, change } = req.body;
+    const { tableId, items, paymentMethod, amountReceived } = req.body;
+    
+    // Validate that amountReceived is a number and greater than or equal to total amount
+    const totalAmount = items.reduce((acc, item) => acc + item.price, 0);
+    const amount = parseFloat(amountReceived);
+    
+    if (isNaN(amount) || amount < totalAmount) {
+      return res.status(400).json({ message: 'Insufficient payment amount.' });
+    }
+    
+    const change = amount - totalAmount;
+
+    // Find and update the order
     const order = await Order.findOneAndUpdate(
       { tableId, status: 'pending' },
       {
         items,
         paymentMethod,
-        totalAmount: items.reduce((acc, item) => acc + item.price, 0),
-        status: 'completed'
+        totalAmount,
+        status: 'completed',
+        orderEndTime: new Date(),
       },
       { new: true }
     );
+
     if (!order) {
       return res.status(404).json({ message: 'Order not found or already completed.' });
     }
-    res.json(order);
+
+    res.json({ order, change });
   } catch (error) {
     console.error('Error during checkout:', error);
     res.status(500).json({ message: 'Error during checkout', error });
   }
 });
+
+
 
 
 module.exports = router;

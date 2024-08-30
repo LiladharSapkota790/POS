@@ -95,7 +95,7 @@ li button:hover {
 
 /* Left Panel for Tables */
 .left-panel {
-  width: 30%;
+  width: 40%;
   padding: 10px;
   border-right: 1px solid #ccc;
 }
@@ -126,7 +126,7 @@ li button:hover {
 
 /* Right Panel for Menu */
 .right-panel {
-  width: 70%;
+  width: 80%;
   padding: 10px;
 }
 
@@ -134,5 +134,67 @@ li button:hover {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
+  margin-bottom: 20px;
+}
+.table-view-container {
+  display: flex;
+  gap: 20px;
+}
+
+.left-panel {
+  flex: 1;
+}
+
+.right-panel {
+  flex: 2;
+}
+
+.table-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.table-item {
+  cursor: pointer;
+  margin: 5px 0;
+  padding: 10px;
+  background-color: #f0f0f0;
+}
+
+.table-item.selected {
+  background-color: #d0f0d0;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.menu-item {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 10px;
+  background-color: #fff;
+  text-align: center;
+}
+
+.menu-item-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.menu-item-button.active {
+  font-weight: bold;
+  color: #007bff;
+}
+
+.item-controls {
+  margin-top: 10px;
+}
+
+.category-section {
   margin-bottom: 20px;
 }
