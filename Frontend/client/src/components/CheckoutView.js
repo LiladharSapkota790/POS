@@ -33,13 +33,22 @@ const CheckoutView = ({ orderItems, onCheckoutComplete, onClose, tableNumber }) 
       }
       setError('');
       onCheckoutComplete(amount);
+      onClose(); // Close the modal after checkout
     } else {
       setError('Please enter the amount received.');
     }
   };
 
+  // New function to handle mouse leave
+  const handleMouseLeave = () => {
+    onClose(); // Close the modal when mouse leaves
+  };
+
   return (
-    <div className={`modal ${orderItems.length > 0 ? 'show' : ''}`}>
+    <div
+      className={`modal ${orderItems.length > 0 ? 'show' : ''}`}
+      onMouseLeave={handleMouseLeave} // Add mouse leave handler
+    >
       <div className="modal-content">
         <h3>Checkout</h3>
         <div>

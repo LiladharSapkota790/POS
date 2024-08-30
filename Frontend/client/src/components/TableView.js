@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api, { getPendingOrders } from '../api/api';
 import Checkout from './CheckoutView'; // Import the Checkout component
+import MenuView from './MenuView'; // Import the MenuView component
 import './TableView.css';
 import { placeOrder } from '../api/api';
 import { Alert } from 'react-bootstrap';
@@ -22,7 +23,22 @@ const TableView = () => {
   useEffect(() => {
     // Fetch tables and menu items
     api.get('/tables')
-      .then(response => setTables(response.data))
+      .then(response => {
+        setTables(response.data);
+        // Set the first table as the default selected table
+        if (response.data.length > 0) {
+          const defaultTable = response.data[0];
+          setSelectedTable(defaultTable);
+          // Fetch pending orders for the default selected table
+          getPendingOrders(defaultTable._id)
+            .then(response => {
+              setOrderItems(response.data.flatMap(order => order.items));
+            })
+            .catch(error => {
+              console.error("There was an error fetching orders!", error);
+            });
+        }
+      })
       .catch(error => console.error("There was an error fetching tables!", error));
 
     api.get('/menu')
@@ -39,11 +55,6 @@ const TableView = () => {
       // Fetch pending orders for the selected table
       getPendingOrders(table._id)
         .then(response => {
-         
-          // Log each order and its items
-          response.data.forEach(order => {
-           
-          });
           setOrderItems(response.data.flatMap(order => order.items));
         })
         .catch(error => {
@@ -92,23 +103,19 @@ const TableView = () => {
 
     try {
       const response = await placeOrder(orderData);
-
-      // Directly use the response as it appears to be the order object
       const newOrder = response;
 
-      // Check if response has all necessary data
       if (!newOrder || !newOrder.tableId || !newOrder.items) {
         throw new Error('No valid order data received from server');
       }
 
       setOrderSuccess('Order placed successfully!');
 
-      // Update ordersByTable with the new order
       setOrdersByTable(prevOrders => ({
         ...prevOrders,
         [selectedTable._id]: [
           ...(prevOrders[selectedTable._id] || []),
-          newOrder // Add the new order directly
+          newOrder
         ]
       }));
     } catch (error) {
@@ -143,7 +150,6 @@ const TableView = () => {
       .then(response => {
         setOrderSuccess('Checkout completed successfully!');
         setShowCheckout(false);
-        // Clear orders for the table after checkout
         setOrdersByTable(prevOrders => {
           const updatedOrders = { ...prevOrders };
           delete updatedOrders[selectedTable._id];
@@ -158,15 +164,25 @@ const TableView = () => {
       });
   };
 
-  const groupedMenuItems = menuItems.reduce((categories, item) => {
-    if (!categories[item.category]) {
-      categories[item.category] = [];
+  const processMenuData = (data) => {
+    // Assuming data is an array with one object
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+      const [menuObject] = data;
+      const processedData = {};
+      for (const [category, subcategories] of Object.entries(menuObject)) {
+        if (category !== '_id') {
+          processedData[category] = subcategories;
+        }
+      }
+      return processedData;
     }
-    categories[item.category].push(item);
-    return categories;
-  }, {});
+    return {};
+  };
 
-  // Automatically hide the alert after 3 seconds
+  const groupedMenuItems = processMenuData(menuItems);
+
+
+
   useEffect(() => {
     if (orderSuccess) {
       const timer = setTimeout(() => {
@@ -211,43 +227,26 @@ const TableView = () => {
                 <p>No items in the order.</p>
               )}
             </div>
-            <button onClick={handleCheckout}>Checkout</button>
-            <button onClick={handlePlaceOrder}>Place Order</button>
+            <div className='placeorder-button-container'> 
+              <button className='checkout-button' onClick={handleCheckout}>Checkout</button>
+              <button className="place-order-button" onClick={handlePlaceOrder}>Place Order</button>
+            </div>
           </div>
         )}
       </div>
 
       <div className="right-panel">
         {selectedTable ? (
-          Object.entries(groupedMenuItems).map(([category, items], index) => (
-            <div className="category-section" key={index}>
-              <h4>{category}</h4>
-              <div className="menu-grid">
-                {items.map(item => (
-                  <div key={item._id} className="menu-item">
-                    <button
-                      onClick={() => handleMenuItemClick(item)}
-                      className={`menu-item-button ${selectedMenuItem && selectedMenuItem._id === item._id ? 'active' : ''}`}
-                    >
-                      {item.name} - ${item.price.toFixed(2)}
-                    </button>
-                    {selectedMenuItem && selectedMenuItem._id === item._id && (
-                      <div className="item-controls">
-                        <textarea
-                          value={comment}
-                          onChange={e => setComment(e.target.value)}
-                          placeholder="Add a comment (optional)"
-                        />
-                        <button onClick={handleAddOrderItem}>Add Item</button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))
+          <MenuView
+            groupedMenuItems={groupedMenuItems}
+            handleMenuItemClick={handleMenuItemClick}
+            selectedMenuItem={selectedMenuItem}
+            handleAddOrderItem={handleAddOrderItem}
+            comment={comment}
+            setComment={setComment}
+          />
         ) : (
-          <p>Select a table to view the menu</p>
+          <div className='place-order-button'>Select Any table to See Menu</div>
         )}
       </div>
 
@@ -256,7 +255,8 @@ const TableView = () => {
           table={selectedTable}
           onCheckoutComplete={handleCheckoutComplete}
           orderItems={orderItems}
-          setShowCheckout={setShowCheckout}
+          onClose={() => setShowCheckout(false)} 
+          tableNumber={selectedTable.number}
         />
       )}
 

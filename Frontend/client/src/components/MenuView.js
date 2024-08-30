@@ -1,48 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import api from '../api/api';
-import './MenuView.css'; // Import the CSS file
+import React, { useState } from 'react';
+import './MenuView.css'; // Importing the CSS file for styling
 
-function MenuView() {
-  const [menuItems, setMenuItems] = useState([]);
+const MenuView = ({ groupedMenuItems, handleMenuItemClick, selectedMenuItem, handleAddOrderItem, comment, setComment }) => {
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubCategory, setSelectedSubCategory] = useState('');
 
-  useEffect(() => {
-    api.get('/menu')
-      .then(response => {
-        setMenuItems(response.data);
-      })
-      .catch(error => {
-        console.error("There was an error fetching the menu!", error);
-      });
-  }, []);
+  // Function to filter menu items by selected category and subcategory
+  const filterMenuItems = () => {
+    if (!selectedCategory) return {};
 
-  // Group menu items by category
-  const categorizedMenu = menuItems.reduce((acc, item) => {
-    const { category } = item;
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(item);
-    return acc;
-  }, {});
+    const categoryItems = groupedMenuItems[selectedCategory] || {};
+    if (!selectedSubCategory) return categoryItems;
+
+    return categoryItems[selectedSubCategory] || [];
+  };
+
+  const filteredItems = filterMenuItems();
 
   return (
     <div className="menu-view">
-      <h2>Menu</h2>
-      {Object.keys(categorizedMenu).map(category => (
-        <div key={category} className="category-section">
-          <h3 className="category-title">{category}</h3>
-          <div className="menu-grid">
-            {categorizedMenu[category].map(item => (
-              <div key={item._id} className="menu-item">
-                <div className="item-name">{item.name}</div>
-                <div className="item-price">${item.price.toFixed(2)}</div>
-              </div>
-            ))}
-          </div>
+      {/* Main Category Selection */}
+      <div className="main-category-nav">
+        {Object.keys(groupedMenuItems).map(category => (
+          <button
+            key={`category-${category}`}
+            onClick={() => {
+              setSelectedCategory(category);
+              setSelectedSubCategory('');
+            }}
+            className={selectedCategory === category ? 'active' : ''}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
+
+      {/* Subcategory Selection */}
+      {selectedCategory && (
+        <div className="subcategory-selection">
+          {Object.keys(groupedMenuItems[selectedCategory] || {}).map(subCategory => (
+            <button
+              key={`subcategory-${subCategory}`}
+              onClick={() => setSelectedSubCategory(subCategory)}
+              className={selectedSubCategory === subCategory ? 'active' : ''}
+            >
+              {subCategory}
+            </button>
+          ))}
         </div>
-      ))}
+      )}
+
+      {/* Menu Items */}
+      {selectedSubCategory && (
+        <div className="menu-grid">
+          {Array.isArray(filteredItems) && filteredItems.map(item => (
+            <div key={item._id} className="menu-item">
+              <button
+                onClick={() => handleMenuItemClick(item)}
+                className={`menu-item-button ${selectedMenuItem && selectedMenuItem._id === item._id ? 'active' : ''}`}
+              >
+                {item.name} - ${item.price.toFixed(2)}
+              </button>
+              {selectedMenuItem && selectedMenuItem._id === item._id && (
+                <div className="item-controls">
+                  <textarea
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    placeholder="Add a comment (optional)"
+                  />
+                  <button onClick={handleAddOrderItem}>Add Item</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-}
+};
 
 export default MenuView;
