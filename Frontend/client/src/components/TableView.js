@@ -77,7 +77,7 @@ const TableView = () => {
       setNewOrderItemName('');
       setNewOrderItemPrice('');
     }
-    setComment('');
+    setComment(''); 
   };
 
   const handleRemoveOrderItem = (index) => {
