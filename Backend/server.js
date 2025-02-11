@@ -2,76 +2,41 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 
-
-
+const orderRoutes = require('./routes/orderRoutes');
+const tableRoutes = require('./routes/tableRoutes');
+const menuRoutes = require('./routes/menuRoutes');
 const orderSummaryRoutes = require('./routes/orderSummaryRoutes');
-const checkoutRoutes = require('./routes/tableRoutes');
-const Table = require('./models/Table'); 
 
-
-
+const Order = require('./models/Order');
+const Table = require('./models/Table');
 
 const app = express();
+
+// Middleware
 app.use(cors());
-app.use(bodyParser.json());
+app.use(express.json()); // Replaces body-parser
 
-
-const tableRoutes = require('./routes/tableRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const menuRoutes = require('./routes/menuRoutes');
-
+// Routes
 app.use('/api/tables', tableRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/menu', menuRoutes);
-
 app.use('/api/summary', orderSummaryRoutes);
 
-
-// Routes
-app.use('/api/orders', orderSummaryRoutes);
-
-app.use('/api', checkoutRoutes); 
-
-  // MongoDB connection
-
-const mongoURI =  process.env.MONGOURI;
-
-mongoose.connect(mongoURI, {
-})
-.then(() => console.log('MongoDB connected'))
-.catch(err => console.error('MongoDB connection error:', err));
-
-
-
-
-
-
-app.get('/', (req, res) => {
-    res.send('LDPOS IS running');
+// MongoDB connection
+const mongoURI = process.env.MONGOURI;
+mongoose.connect(mongoURI, {})
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => {
+    console.error('❌ MongoDB connection error:', err);
+    process.exit(1);
   });
-  
 
-// Routes
-app.get('/api/tables', async (req, res) => {
-    const tables = await Table.find().populate('orders');
-    res.json(tables);
+// Test route
+app.get('/', (req, res) => {
+  res.send('LDPOS is running');
 });
 
-app.post('/api/tables', async (req, res) => {
-    const table = new Table(req.body);
-    await table.save();
-    res.json(table);
-});
-
-app.post('/api/orders', async (req, res) => {
-    const order = new Order(req.body);
-    await order.save();
-    const table = await Table.findById(req.body.table);
-    table.orders.push(order);
-    await table.save();
-    res.json(order);
-});
-
-app.listen(5000, () => console.log('LDPOS IS running on port 5000'));
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
